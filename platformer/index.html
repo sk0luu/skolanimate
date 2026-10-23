@@ -182,10 +182,9 @@
             pipe(48, 4);
             coin(35, 9); coin(43, 8); coin(49, 7);
 
-            // Foso con plataforma
-            row(54, 9, 5, T.BRICK);
-            put(56, 9, T.QUESTION);
-            coinRow(54, 8, 5);
+            // Segundo foso (sin techo encima para poder saltarlo)
+            [[55, 10], [56, 9], [57, 10]].forEach(([x, y]) => coin(x, y));
+            put(60, 9, T.QUESTION);
 
             // Zona de bloques
             row(62, 9, 5, T.BRICK);
@@ -220,7 +219,7 @@
             }
 
             // Enemigos (posicion en tiles)
-            [18, 26, 37, 45, 51, 63, 70, 73, 83, 93, 100, 105, 120, 123].forEach(tx => {
+            [18, 26, 37, 45, 51, 63, 70, 73, 83, 93, 100, 105].forEach(tx => {
                 enemies.push({
                     x: tx * TS + 2, y: GROUND_ROW * TS - 28, w: 28, h: 28,
                     vx: 0, vy: 0, dir: -1, anim: 0, squish: 0, knocked: false, remove: false
@@ -250,7 +249,7 @@
             score = 0; coinCount = 0; timeLeft = LEVEL_TIME; flagDrop = 0;
             Object.assign(p, {
                 x: 2 * TS, y: GROUND_ROW * TS - 30, vx: 0, vy: 0, facing: 1,
-                onGround: true, coyote: 0, anim: 0, mode: 'run', deadT: 0, waitT: 0
+                onGround: true, coyote: 0, anim: 0, mode: 'run', deadT: 0, waitT: 0, bounce: false
             });
             camX = 0;
         }
@@ -421,7 +420,8 @@
                 p.vy = JUMP_V; jumpBuf = 0; p.coyote = 0; p.onGround = false;
                 sfx.jump();
             }
-            if (!down(JUMP) && p.vy < -4) p.vy = -4;   // salto variable
+            if (!p.bounce && !down(JUMP) && p.vy < -4) p.vy = -4;   // salto variable (no aplica al rebote de un pisoton)
+            if (p.bounce && p.vy >= 0) p.bounce = false;
             p.vy = Math.min(p.vy + G, MAX_FALL);
 
             p.prevBottom = p.y + p.h;
@@ -466,6 +466,7 @@
                         e.squish = 30;
                         p.y = e.y - p.h;
                         p.vy = down(JUMP) ? -10 : -7;
+                        p.bounce = true;
                         p.onGround = false;
                         score += 100; addFx(e.x, e.y - 8, '+100');
                         sfx.stomp();
